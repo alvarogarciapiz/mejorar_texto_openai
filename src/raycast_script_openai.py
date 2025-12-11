@@ -2,7 +2,7 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Mejorar_Texto_OpenAI
+# @raycast.title Mejorar_Texto_OpenAI_2
 # @raycast.mode silent
 
 # Optional parameters:
@@ -19,6 +19,9 @@ import requests
 import os
 
 import sys
+
+USE_LOCAL_MODEL = False  # Cambia a True para usar modelo local con Ollama
+LOCAL_MODEL = "gemma3:4b"  # Nombre del modelo local en Ollama
 
 OPENAI_API_KEY = "INSERTA-TU-API-DE-OPENAI"
 
@@ -43,6 +46,9 @@ Instrucciones de salida:
 # URL del endpoint de completions de OpenAI
 URL = "https://api.openai.com/v1/chat/completions"
 
+# URL del endpoint de Ollama (local)
+OLLAMA_URL = "http://localhost:11434/api/chat"
+
 # Cabeceras para la solicitud HTTP
 HEADERS = {
     "Authorization": f"Bearer {OPENAI_API_KEY}",
@@ -64,7 +70,35 @@ def obtener_texto_seleccionado():
         print(f"Error al obtener el texto seleccionado: {e}")
         sys.exit(1)
 
+def corregir_texto_ollama(texto):
+    data = {
+        "model": LOCAL_MODEL,
+        "messages": [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": texto},
+        ],
+        "stream": False,
+        "options": {
+            "temperature": 0,
+            "num_predict": 1024,
+        }
+    }
+    try:
+        response = requests.post(OLLAMA_URL, json=data)
+        response.raise_for_status()
+        contenido = response.json()
+        return contenido["message"]["content"].strip()
+    except requests.exceptions.RequestException as e:
+        print(f"Error en la solicitud a Ollama: {e}")
+        sys.exit(1)
+    except (KeyError, IndexError):
+        print("Error: Respuesta inesperada de la API de Ollama.")
+        sys.exit(1)
+
 def corregir_texto(texto):
+    if USE_LOCAL_MODEL:
+        return corregir_texto_ollama(texto)
+    
     data = {
         "model": MODEL,
         "messages": [

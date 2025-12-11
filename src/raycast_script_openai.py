@@ -2,7 +2,7 @@
 
 # Required parameters:
 # @raycast.schemaVersion 1
-# @raycast.title Mejorar_Texto_OpenAI_2
+# @raycast.title Mejorar_Texto_OpenAI
 # @raycast.mode silent
 
 # Optional parameters:
